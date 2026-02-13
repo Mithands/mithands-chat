@@ -19,8 +19,7 @@ export default class AudioManager {
         // Default sounds
         this.defaultSounds = {
             notification: this.config.AUDIO_URL || 'sounds/cyberpunk-message.mp3',
-            achievement: 'sounds/logro.mp3',
-            sevilla: 'sounds/himno-sevilla1.mp3'
+            achievement: 'sounds/logro.mp3'
         };
 
         this.initialized = false;
@@ -48,15 +47,7 @@ export default class AudioManager {
         EventManager.on('chat:messageReceived', (data) => {
             const username = (data && data.username) ? data.username.toLowerCase() : '';
 
-            // ESPECIAL: Himno del Sevilla para el primer mensaje de usuarios específicos
-            const specialUsers = ['test', 'ractor09'];
-
-            if (specialUsers.includes(username) && !this.playedFirstMessageUsers.has(username)) {
-                this.playedFirstMessageUsers.add(username);
-                this.playSevilla();
-            } else {
-                this.playChatMessage();
-            }
+            this.playChatMessage();
         });
 
         // 2. Level Up (Data contains newLevel)
@@ -68,8 +59,7 @@ export default class AudioManager {
         // 4. Test sound
         EventManager.on('test:sound', () => this.playChatMessage());
 
-        // 5. Sevilla Anthem (Manual trigger if needed)
-        EventManager.on('chat:testFirstMessage', () => this.playSevilla());
+
 
         // 6. Reset session on stream start
         EventManager.on('stream:statusChanged', (isOnline) => {
@@ -84,12 +74,7 @@ export default class AudioManager {
         this.playedFirstMessageUsers.clear();
     }
 
-    /**
-     * Plays the Sevilla anthem
-     */
-    playSevilla() {
-        this._playSoundFile(this.defaultSounds.sevilla);
-    }
+
 
     /**
      * Plays the standard chat notification sound

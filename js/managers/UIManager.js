@@ -416,7 +416,7 @@ export default class UIManager {
                 this.dom.container.classList.add('ractor09-bg');
             }
 
-            // Custom Background for Test (using Sevilla)
+            // Custom Background for Test
             if (username.toLowerCase() === 'test') {
                 this.dom.container.classList.add('test-bg');
             }
