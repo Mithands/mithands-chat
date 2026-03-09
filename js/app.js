@@ -7,7 +7,6 @@ import LevelCommand from './commands/LevelCommand.js';
 import AchievementsCommand from './commands/AchievementsCommand.js';
 import TopCommand from './commands/TopCommand.js';
 import StreakCommand from './commands/StreakCommand.js';
-import BroCommand from './commands/BroCommand.js';
 import HelpCommand from './commands/HelpCommand.js';
 import StatsCommand from './commands/StatsCommand.js';
 import UptimeCommand from './commands/UptimeCommand.js';
@@ -49,7 +48,6 @@ class App {
             this.commandManager.registerCommand(new AchievementsCommand());
             this.commandManager.registerCommand(new TopCommand());
             this.commandManager.registerCommand(new StreakCommand());
-            this.commandManager.registerCommand(new BroCommand());
             this.commandManager.registerCommand(new StatsCommand());
             this.commandManager.registerCommand(new UptimeCommand());
             this.commandManager.registerCommand(new EmotesCommand());

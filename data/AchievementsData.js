@@ -27,8 +27,8 @@
 export const ACHIEVEMENTS_DATA = {
     _metadata: {
         version: "1.1",
-        totalAchievements: 150, // +1 Nightingale + 6 nuevas categorías
-        categories: ["messages", "streaks", "levels", "xp", "ranking", "stream", "holidays", "special", "bro", "cyberpunk2077", "witcher3", "nightingale", "rust", "apex", "scum", "starwars", "arcraiders", "minecraft"],
+        totalAchievements: 145, // -5 Bro achievements
+        categories: ["messages", "streaks", "levels", "xp", "ranking", "stream", "holidays", "special", "cyberpunk2077", "witcher3", "nightingale", "rust", "apex", "scum", "starwars", "arcraiders", "minecraft"],
         rarities: ["common", "uncommon", "rare", "epic", "legendary"],
         lastUpdated: "2026-01-28"
     },
@@ -1130,54 +1130,6 @@ export const ACHIEVEMENTS_DATA = {
             rarity: "legendary",
             icon: "🌟",
             rule: { field: "userData.achievements.length", operator: ">=", value: 138 }
-        },
-
-        // ==================== BRO ====================
-        bro_initiate: {
-            name: "Bro Initiate",
-            description: "Dijiste bro por primera vez",
-            condition: "Decir \"bro\" 1 vez",
-            category: "bro",
-            rarity: "common",
-            icon: "🤜",
-            image: "img/logros/bro initiate.png",
-            rule: { field: "stats.broCount", operator: ">=", value: 1 }
-        },
-        bro_regular: {
-            name: "Bro Regular",
-            description: "El bro habitual",
-            condition: "Decir \"bro\" 10 veces",
-            category: "bro",
-            rarity: "uncommon",
-            icon: "🤛",
-            rule: { field: "stats.broCount", operator: ">=", value: 10 }
-        },
-        bro_fanatic: {
-            name: "Bro Fanatic",
-            description: "Fanático del bro",
-            condition: "Decir \"bro\" 20 veces",
-            category: "bro",
-            rarity: "rare",
-            icon: "😎",
-            rule: { field: "stats.broCount", operator: ">=", value: 20 }
-        },
-        bro_master: {
-            name: "Bro Master",
-            description: "Maestro del bro",
-            condition: "Decir \"bro\" 50 veces",
-            category: "bro",
-            rarity: "epic",
-            icon: "🧢",
-            rule: { field: "stats.broCount", operator: ">=", value: 50 }
-        },
-        bro_legend: {
-            name: "Bro Legend",
-            description: "Leyenda del bro",
-            condition: "Decir \"bro\" 100 veces",
-            category: "bro",
-            rarity: "legendary",
-            icon: "💪",
-            rule: { field: "stats.broCount", operator: ">=", value: 100 }
         },
 
         // ==================== OTROS ====================

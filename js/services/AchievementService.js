@@ -221,7 +221,6 @@ export default class AchievementService {
                 messagesWithEmotes: savedStats.messagesWithEmotes || 0,
                 mentionCount: savedStats.mentionCount || 0,
                 nightMessages: savedStats.nightMessages || 0,
-                broCount: savedStats.broCount || 0,
                 ggCount: savedStats.ggCount || 0,
                 earlyMorningMessages: savedStats.earlyMorningMessages || 0,
 
@@ -311,14 +310,6 @@ export default class AchievementService {
         // Mensaje de trasnochador (04:00 - 06:00)
         if (hour >= 4 && hour < 6) {
             stats.earlyMorningMessages = (stats.earlyMorningMessages || 0) + 1;
-        }
-
-        // Contador de "BRO"
-        if (context.message && /\bbro\b/i.test(context.message)) {
-            const matches = context.message.match(/\bbro\b/gi);
-            if (matches && matches.length > 0) {
-                stats.broCount = (stats.broCount || 0) + matches.length;
-            }
         }
 
         // Contador de "GG"
