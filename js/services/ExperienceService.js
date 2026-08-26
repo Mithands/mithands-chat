@@ -244,6 +244,24 @@ export default class ExperienceService {
         // Obtener o crear datos del usuario
         let userData = this.getUserData(lowerUser);
 
+        // NUEVO: Solo permitir sumar XP si el stream está ONLINE
+        if (!context.isStreamLive) {
+            return {
+                username: lowerUser,
+                xpGained: 0,
+                xpBeforeMultiplier: 0,
+                xpSources: [],
+                totalXP: userData.xp,
+                level: userData.level,
+                previousLevel: userData.level,
+                leveledUp: false,
+                levelProgress: this.levelCalculator.getLevelProgress(userData.xp, userData.level),
+                levelTitle: this.levelCalculator.getLevelTitle(userData.level),
+                streakDays: userData.streakDays || 0,
+                streakMultiplier: this.streakManager.getStreakMultiplier(userData.streakDays || 0)
+            };
+        }
+
         // Verificar cooldown global de XP
         const now = Date.now();
         if (userData.lastActivity && (now - userData.lastActivity) < this.xpConfig.settings.minTimeBetweenXP) {
@@ -297,13 +315,16 @@ export default class ExperienceService {
             this.dailyFirstMessage.set(lowerUser, true);
         }
 
-        // 3. Aplicar multiplicador de racha
+        // 3. Aplicar multiplicadores (Racha y First Hack)
         const streakMultiplier = this.streakManager.getStreakMultiplier(streakResult.streakDays);
+        const firstHackMultiplier = context.isFirstHack ? 2 : 1;
+        const effectiveMultiplier = streakMultiplier * firstHackMultiplier;
+
         const xpBeforeMultiplier = totalXP;
-        totalXP = Math.floor(totalXP * streakMultiplier);
+        totalXP = Math.floor(totalXP * effectiveMultiplier);
 
         // Aplicar límite máximo por mensaje (después del multiplicador)
-        totalXP = Math.min(totalXP, this.xpConfig.settings.maxXPPerMessage * streakMultiplier);
+        totalXP = Math.min(totalXP, this.xpConfig.settings.maxXPPerMessage * effectiveMultiplier);
 
         // Actualizar datos del usuario
         userData.xp += totalXP;
@@ -357,7 +378,9 @@ export default class ExperienceService {
             levelProgress: this.levelCalculator.getLevelProgress(userData.xp, newLevel),
             levelTitle: this.levelCalculator.getLevelTitle(newLevel),
             streakDays: userData.streakDays || 0,
-            streakMultiplier
+            streakMultiplier: effectiveMultiplier,
+            isFirstHack: Boolean(context.isFirstHack),
+            firstHackMultiplier
         };
     }
 
@@ -530,7 +553,21 @@ export default class ExperienceService {
      * @returns {Array} Lista ordenada de usuarios
      */
     getXPLeaderboard(limit = 10) {
+        const ignoredUsers = [
+            'mithands',
+            'wizebot',
+            'streamelements',
+            'firsthacker',
+            'test',
+            'test2',
+            'test3',
+            'streaktester',
+            'usuarionuevo',
+            ...(this.config.XP_IGNORED_USERS_FOR_BONUS || [])
+        ].map(u => u.toLowerCase());
+
         const users = Array.from(this.usersXP.entries())
+            .filter(([username]) => !ignoredUsers.includes(username.toLowerCase()))
             .map(([username, data]) => ({
                 username,
                 xp: data.xp,

@@ -99,6 +99,13 @@ export default class DevTools {
             xpService.usersXP.set(username.toLowerCase(), userData);
             console.log(`🔥 Streak set for ${username}: ${days} days`);
         };
+
+        window.resetFirstHack = () => {
+            if (this.app.processor) {
+                this.app.processor.hasFirstHackOccurred = false;
+                console.log('⚡ First Hack reseteado manualmente desde DevTools.');
+            }
+        };
     }
 
     /** @private */

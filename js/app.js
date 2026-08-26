@@ -21,6 +21,7 @@ import AudioManager from './managers/AudioManager.js';
 class App {
     constructor() {
         this.config = CONFIG;
+        this.isStreamOnline = null;
         console.log('🚀 Booting Twitch Chat Overlay...');
 
         // 1. Instanciar Message Processor
@@ -113,20 +114,29 @@ class App {
      */
     startStreamCategoryUpdate() {
         this.categoryTimer = null;
+        let isSimulated = false;
+
+        EventManager.on('stream:setSimulation', (simulatedOnline) => {
+            isSimulated = true;
+            this.isStreamOnline = simulatedOnline;
+            console.log(`🧪 Stream simulado establecido a: ${simulatedOnline ? 'ONLINE 🟢' : 'OFFLINE 🔴'}`);
+            EventManager.emit('stream:statusChanged', simulatedOnline);
+        });
 
         const updateMetadata = async () => {
-            if (!this.twitchService) return;
+            if (!this.twitchService || isSimulated) return;
 
             // 1. Obtener Categoría y Estado
             const category = await this.twitchService.fetchChannelCategory();
             const isOnline = await this.twitchService.fetchStreamStatus();
 
-            // Detectar cambio de estado
-            const statusChanged = isOnline !== this.isStreamOnline;
+            // Detectar cambio de estado o sincronizar en el primer arranque
+            const statusChanged = this.isStreamOnline === null || isOnline !== this.isStreamOnline;
             this.isStreamOnline = isOnline;
 
-            // EventManager ya notifica a los componentes interesados (Processor, UI, Achievements)
+            // EventManager notifica a los componentes interesados (Processor, UI, Achievements)
             if (statusChanged) {
+                console.log(`📡 App: Estado del stream sincronizado a -> ${isOnline ? 'ONLINE 🟢' : 'OFFLINE 🔴'}`);
                 EventManager.emit('stream:statusChanged', isOnline);
             }
 

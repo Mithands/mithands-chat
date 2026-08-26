@@ -1,4 +1,4 @@
-﻿/* ===========================================
+/* ===========================================
    CYBERPUNK 2077 CHAT WIDGET - BUNDLE
    Generated: 01/19/2026 06:45:39
    =========================================== */
@@ -1867,6 +1867,13 @@ body {
   opacity: 1;
   transform: translateY(-120%);
   animation: none;
+}
+
+.xp-gain-indicator.first-hack-gain {
+  color: #ff8000;
+  text-shadow: 0 0 10px rgba(255, 128, 0, 0.8), 0 0 20px rgba(255, 128, 0, 0.4);
+  font-weight: 900;
+  letter-spacing: 0.5px;
 }
 
 .xp-gain-indicator.fade-out {

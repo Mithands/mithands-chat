@@ -200,20 +200,21 @@ export default class XPDisplayManager {
 
         // Mostrar XP ganado si hay
         if (xpResult && xpResult.xpGained > 0) {
-            this.showXPGain(xpResult.xpGained);
+            this.showXPGain(xpResult.xpGained, xpResult.isFirstHack);
         }
     }
 
     /**
      * Muestra indicador de XP ganado (+XP)
      * @param {number} xpGained - Cantidad de XP ganado
+     * @param {boolean} isFirstHack - Si es el primer mensaje de la sesión de stream
      */
-    showXPGain(xpGained) {
+    showXPGain(xpGained, isFirstHack = false) {
         if (!this.dom.xpGainContainer) return;
 
         const indicator = document.createElement('div');
-        indicator.className = 'xp-gain-indicator';
-        indicator.textContent = `+${xpGained}`;
+        indicator.className = 'xp-gain-indicator' + (isFirstHack ? ' first-hack-gain' : '');
+        indicator.textContent = isFirstHack ? `+${xpGained} ⚡ FIRST HACK (x2)` : `+${xpGained}`;
 
         this.dom.xpGainContainer.appendChild(indicator);
 

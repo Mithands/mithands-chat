@@ -21,6 +21,11 @@ export default class XPSourceEvaluator {
      * @returns {Object} { totalXP, sources: [{source, xp}] }
      */
     evaluateMessage(context, state = {}) {
+        // Si el stream no está online, no se otorga XP por mensajes
+        if (!context.isStreamLive) {
+            return { totalXP: 0, sources: [] };
+        }
+
         let totalXP = 0;
         const xpSources = [];
 

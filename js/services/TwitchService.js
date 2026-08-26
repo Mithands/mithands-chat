@@ -152,18 +152,37 @@ export default class TwitchService {
      * @returns {Promise<boolean>} true si está online, false si está offline
      */
     async fetchStreamStatus() {
+        // 1. Intentar con DecAPI (Uptime endpoint)
         try {
             const response = await fetch(`https://decapi.me/twitch/uptime/${this.channel}`);
-            if (!response.ok) {
-                return false;
+            if (response.ok) {
+                const text = (await response.text()).trim().toLowerCase();
+                if (text.includes('offline') || text.includes('not found') || text.includes('error') || text === '') {
+                    if (CONFIG.DEBUG) console.log(`📡 TwitchService: Canal ${this.channel} detectado OFFLINE (DecAPI: "${text}")`);
+                    return false;
+                }
+                if (CONFIG.DEBUG) console.log(`📡 TwitchService: Canal ${this.channel} detectado ONLINE (DecAPI: "${text}")`);
+                return true;
             }
-            const text = await response.text();
-            const isOffline = text.toLowerCase().includes('offline');
-            return !isOffline;
         } catch (error) {
-            console.warn('⚠️ No se pudo verificar estado del stream:', error);
-            return false;
+            console.warn('⚠️ No se pudo verificar estado del stream vía DecAPI:', error);
         }
+
+        // 2. Fallback secundario a IVR API
+        try {
+            const ivrRes = await fetch(`https://api.ivr.fi/v2/twitch/user?login=${this.channel}`);
+            if (ivrRes.ok) {
+                const data = await ivrRes.json();
+                const user = Array.isArray(data) ? data[0] : data;
+                const isLive = Boolean(user && user.stream);
+                if (CONFIG.DEBUG) console.log(`📡 TwitchService: Canal ${this.channel} detectado ${isLive ? 'ONLINE' : 'OFFLINE'} (IVR API)`);
+                return isLive;
+            }
+        } catch (e) {
+            console.warn('⚠️ No se pudo verificar estado del stream vía IVR:', e);
+        }
+
+        return false;
     }
 
     /**

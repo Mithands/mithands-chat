@@ -853,6 +853,16 @@ export const ACHIEVEMENTS_DATA = {
         },
 
         // ==================== STREAM ====================
+        first_hack: {
+            name: "First Hack",
+            description: "Inaugurador del directo",
+            condition: "Primer mensaje al iniciar stream (x2 XP)",
+            category: "stream",
+            rarity: "rare",
+            icon: "⚡",
+            image: "img/logros/first_hack.png",
+            rule: { field: "stats.firstHackCount", operator: ">=", value: 1 }
+        },
         stream_opener: {
             name: "Stream Opener",
             description: "Abridor del stream",

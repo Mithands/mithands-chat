@@ -33,6 +33,7 @@ export default class MessageProcessor {
         // Estado del stream
         this.isStreamOnline = false;
         this.streamStartTime = null;
+        this.hasFirstHackOccurred = false;
 
         // NotificationManager will be initialized in init()
         this.notificationManager = null;
@@ -241,6 +242,43 @@ export default class MessageProcessor {
             // Si es un comando, DETENER procesamiento visual aquí.
             // El CommandManager se encargará de ejecutar la lógica y emitir respuestas de sistema si corresponde.
             if (message.startsWith('!')) {
+                // Comandos especiales de prueba exclusivos para el streamer
+                if (lowerUser === 'mithands' || lowerUser === 'playmithttv') {
+                    const cmd = message.toLowerCase().trim();
+                    if (cmd === '!simstream on' || cmd === '!stream on') {
+                        this.hasFirstHackOccurred = false;
+                        EventManager.emit('stream:setSimulation', true);
+                        console.log('🧪 Modo Stream Simulado ONLINE activado para pruebas');
+                        return;
+                    } else if (cmd === '!simstream off' || cmd === '!stream off') {
+                        EventManager.emit('stream:setSimulation', false);
+                        console.log('🧪 Modo Stream Simulado OFFLINE activado');
+                        return;
+                    } else if (cmd.startsWith('!resethack')) {
+                        this.hasFirstHackOccurred = false;
+                        const parts = cmd.split(' ');
+                        const targetUser = parts[1] ? parts[1].toLowerCase() : lowerUser;
+                        if (this.services.xp && this.services.achievements) {
+                            const uData = this.services.xp.getUserData(targetUser);
+                            if (uData && uData.achievements) {
+                                uData.achievements = uData.achievements.filter(a => (typeof a === 'string' ? a : a.id) !== 'first_hack');
+                            }
+                            const uStats = this.services.achievements.getUserStats(targetUser);
+                            if (uStats) {
+                                uStats.firstHackCount = 0;
+                            }
+                            console.log(`⚡ First Hack reseteado para: ${targetUser}`);
+                        }
+                        return;
+                    } else if (cmd === '!testfirsthack') {
+                        if (this.services.achievements && this.services.achievements.achievements['first_hack']) {
+                            this.services.achievements.emitAchievementUnlocked(username, this.services.achievements.achievements['first_hack']);
+                            console.log('🏆 Test First Hack emitido a OBS');
+                        }
+                        return;
+                    }
+                }
+
                 // Aún trackeamos actividad técnica (que el usuario está vivo), pero no mostramos el texto basura
                 EventManager.emit('user:activity', username);
                 return;
@@ -337,10 +375,30 @@ export default class MessageProcessor {
      * @param {number} emoteCount - Cantidad de emotes (ya calculado en process)
      */
     _processXP(username, message, emoteCount, tags = {}) {
+        // Permitir simulación si tags.isStreamLive viene explícito (desde tests o panel)
+        const isLive = tags.isStreamLive !== undefined ? Boolean(tags.isStreamLive) : Boolean(this.isStreamOnline);
+
+        if (!isLive) {
+            console.log(`🛑 [XP BLOQUEADO] Stream OFFLINE -> Mensaje de "${username}" no suma XP ni logros.`);
+        } else {
+            console.log(`🟢 [XP ACTIVO] Stream ONLINE -> Procesando XP para "${username}"`);
+        }
+
+        // Determinar si es First Hack
+        let isFirstHack = false;
+        if (tags.isFirstHack !== undefined) {
+            isFirstHack = Boolean(tags.isFirstHack);
+        } else if (isLive && !this.hasFirstHackOccurred) {
+            isFirstHack = true;
+            this.hasFirstHackOccurred = true;
+            console.log(`⚡ [FIRST HACK] ¡"${username}" ha ejecutado el First Hack del stream! (x2 XP)`);
+        }
+
         const xpContext = {
             hasEmotes: emoteCount > 0,
             emoteCount: emoteCount,
-            isStreamLive: this.isStreamOnline,
+            isStreamLive: isLive,
+            isFirstHack: isFirstHack,
             isStreamStart: this._checkIsStreamStart(),
             hasMention: message && message.includes('@'),
             message: message
@@ -348,17 +406,20 @@ export default class MessageProcessor {
 
         const xpResult = this.services.xp.trackMessage(username, xpContext);
 
-        // Verificar logros (Antes de actualizar display para que cuente los nuevos)
+        // Verificar logros solo si el stream está online
         if (this.services.achievements) {
-            // Añadir flags relevantes para logros
-            const achievementContext = {
-                ...xpContext,
-                // Si viene una categoría en los tags (desde test panel), la inyectamos aquí
-                category: tags.category,
-                isFirstMessageOfDay: xpResult.xpSources && xpResult.xpSources.some(s => s.source === 'FIRST_MESSAGE_DAY'),
-                streakMultiplier: xpResult.streakMultiplier || 1
-            };
-            this.services.achievements.checkAchievements(username, achievementContext);
+            if (isLive) {
+                // Añadir flags relevantes para logros
+                const achievementContext = {
+                    ...xpContext,
+                    isFirstHack: isFirstHack,
+                    // Si viene una categoría en los tags (desde test panel), la inyectamos aquí
+                    category: tags.category,
+                    isFirstMessageOfDay: xpResult.xpSources && xpResult.xpSources.some(s => s.source === 'FIRST_MESSAGE_DAY'),
+                    streakMultiplier: xpResult.streakMultiplier || 1
+                };
+                this.services.achievements.checkAchievements(username, achievementContext);
+            }
 
             // Inyectar la lista actualizada de logros en xpResult
             const latestData = this.services.xp.getUserData(username);
@@ -378,22 +439,18 @@ export default class MessageProcessor {
     // =========================================================================
 
     /**
-     * Limpieza al cerrar
-     */
-    /**
-     * Actualiza el estado del stream (Delegado desde App)
-     */
-
-    /**
      * Actualiza el estado del stream (Delegado desde App)
      */
     updateStreamStatus(isOnline) {
         // Detectar inicio de stream (offline -> online)
         if (isOnline && !this.isStreamOnline) {
             this.streamStartTime = Date.now();
+            this.hasFirstHackOccurred = false; // Resetear First Hack para la nueva sesión
             console.log('📡 MessageProcessor: Stream detected as ONLINE at', new Date(this.streamStartTime).toLocaleTimeString());
-        } else if (!isOnline) {
+        } else if (!isOnline && this.isStreamOnline) {
             this.streamStartTime = null;
+            this.hasFirstHackOccurred = false;
+            console.log('📡 MessageProcessor: Stream detected as OFFLINE');
         }
 
         this.isStreamOnline = isOnline;

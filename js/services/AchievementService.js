@@ -254,6 +254,7 @@ export default class AchievementService {
                 rivalsDefeated: savedStats.rivalsDefeated || 0,
 
                 // Stream
+                firstHackCount: savedStats.firstHackCount || 0,
                 streamOpenerCount: savedStats.streamOpenerCount || 0,
                 liveMessages: savedStats.liveMessages || 0,
                 offlineMessages: savedStats.offlineMessages || 0,
@@ -333,6 +334,10 @@ export default class AchievementService {
         // ===== STREAM =====
         if (context.isStreamLive) {
             stats.liveMessages = (stats.liveMessages || 0) + 1;
+
+            if (context.isFirstHack) {
+                stats.firstHackCount = (stats.firstHackCount || 0) + 1;
+            }
 
             if (context.isStreamStart) {
                 stats.streamOpenerCount = (stats.streamOpenerCount || 0) + 1;
